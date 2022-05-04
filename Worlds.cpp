@@ -293,7 +293,7 @@ void build_practical_world(World* w, double distance) {
 }
 
 
-void build_sphere_triangle_box(World* w) {    
+void build_sphere_triangle_box(World* w) {
     add_sphere_helper(w, lightGreen, Point3D(1.7, -0.2, 1.7), SIDE/2.5);
     add_bb_helper(w, orange, Point3D( 2, 0, 0), 0.75 * SIDE, SIDE, 2.5);
 
@@ -632,17 +632,17 @@ void build_stereo(World* w, CHOICE choice) {
   w->vp.set_vres(200);
   w->vp.set_pixel_size(0.05);
   w->vp.set_samples(num_samples);
-  
+
   w->tracer_ptr = new RayCast(w);
 
   float vpd = 100;  // view plane distance for 200 x 200 pixel images
 
   Pinhole* left_camera = new Pinhole;
   left_camera->set_view_distance(vpd);
-  
+
   Pinhole* right_camera = new Pinhole;
   right_camera->set_view_distance(vpd);
-  
+
   StereoCamera* stereo = new StereoCamera;
 //  Stereo* stereo = new Stereo;
   if (choice == A) {
@@ -663,7 +663,7 @@ void build_stereo(World* w, CHOICE choice) {
   stereo->set_stereo_angle(0.75);  // deg, not radians
   stereo->setup_cameras();
   w->set_camera(stereo);
-  
+
 //  PointLight* lt = new PointLight;
   Directional* lt = new Directional;
   lt->set_direction(100, 100, 100);
@@ -676,36 +676,36 @@ void build_stereo(World* w, CHOICE choice) {
   double ka_ = 0.2;
   double kd_ = 0.2;
   double ks_ = 0.06;
-  
+
   std::shared_ptr<Phong> phong1 = std::make_shared<Phong>();
   phong1->set_cd(cyan);
   phong1->set_ka(ka_);
   phong1->set_kd(kd_);
   phong1->set_ks(ks_);
   phong1->set_exp(exp_);
-  
+
   std::shared_ptr<Phong> phong2 = std::make_shared<Phong>();
   phong2->set_cd(redBrown);
   phong2->set_ka(ka_);
   phong2->set_kd(kd_);
   phong2->set_ks(ks_);
   phong2->set_exp(exp_);
-  
+
   std::shared_ptr<Phong> phong3 = std::make_shared<Phong>();
   phong3->set_cd(yellow);
   phong3->set_ka(ka_);
   phong3->set_kd(kd_);
   phong3->set_ks(ks_);
   phong3->set_exp(exp_);
-  
+
   Sphere* sphere1 = new Sphere(Point3D(0, 0, 35), 0.75);
   sphere1->set_material(phong1);
   w->add_object(sphere1);
-  
+
   Sphere* sphere2 = new Sphere(Point3D(0), 2);
   sphere2->set_material(phong2);
   w->add_object(sphere2);
-  
+
   Sphere* sphere3 = new Sphere(Point3D(1.5, 0, -80), 2);
   sphere3->set_material(phong3);
   w->add_object(sphere3);
@@ -1074,7 +1074,7 @@ Instance* add_body_helper(World* w, const RGBColor& color, double a, double b,
 }
 
 void build_voyager(World* w) {
-    //1.Ground - big checkerboard    
+    //1.Ground - big checkerboard
     Plane* plane = new Plane(Point3D(-30, -30, 0), Normal(0, 0, 1));
     build_checkerboard(plane, grey, white, 8);
     Instance* planer = new Instance(plane);
@@ -1192,10 +1192,10 @@ void build_voyager(World* w) {
 
     //XII.Time for sampling angle viewing
     Instance* craft_sample = new Instance(voyager);
-    Point3D scaler = Point3D(0.8,0.7,0.9);
+    Point3D scaler = Point3D(0.6,0.6,0.6);
     craft_sample->scale(scaler);//smaller for easier rendering
-    w->add_object(craft_sample);
-/*
+//    w->add_object(craft_sample);
+
     //Overhead
     Instance* overhead_craft = new Instance(craft_sample->clone());
     overhead_craft->rotate_z(45);
@@ -1235,7 +1235,7 @@ void build_voyager(World* w) {
     back_craft->rotate_x(-20);
     back_craft->rotate_z(-03);
     w->add_object(back_craft);
-*/
+
 }
 
 void build_voyager_world(World* w, int choice) {
@@ -1243,7 +1243,7 @@ void build_voyager_world(World* w, int choice) {
     Pinhole* ptr = new Pinhole;
     //1.1.Eye at
     switch(choice) {
-        case 0: ptr->set_eye(20, 0, 250);   break;  //top
+        case 0: ptr->set_eye(20, 0, 400);   break;  //top 250@Z original
         case 1: ptr->set_eye(-150, 0, 21);  break;  //front
         case 2: ptr->set_eye(0, -300, 21);  break;  //side
         case 3: ptr->set_eye(250, 0, 23);   break;  // back
@@ -1298,16 +1298,30 @@ void build_transparent(World* w, const Point3D& ball) {
     w->add_object(is);
 }
 
-void set_viewpoint(World* w, Point3D& pt, int view_choice, float width, float height) {
+void set_viewpoint(World* w, Point3D& target, VIEWPOINT view_choice, double distance, double view_distance) {
     Pinhole* ptr = new Pinhole;
-    ptr->set_view_distance(250);
+    ptr->set_view_distance(view_distance);
+    double x=target.x;
+    double y=target.y;
+    double z=target.z;
+
+    Point3D origin = Point3D(0,0,0);
+    add_bb_helper(w,red,origin,30,2,1);//x
+    add_bb_helper(w,darkBlue,origin,2,30,1);//y
+
     switch(view_choice) {
-        case 0: ptr->set_eye(-150, 0, 40); break;//FRONT
-        case 1: ptr->set_eye(150, 0, 40); break;//BACK
-        case 2: ptr->set_eye(0, -150, 40);break;//SIDE
-        case 3: ptr->set_eye(0, 0, 150);break;//OVERHEAD
+        case OVERHEAD:      z+=distance; break;
+        case UNDERNEATH:    z-=distance; break;
+        case FRONT:         y+=distance; break;
+        case BACK:          y-=distance; break;
+        case LEFT:          x-=distance; break;
+        case RIGHT:         x+=distance; break;
+    default: throw new std::invalid_argument("Invalid choice\n"); break;
     }
-    ptr->set_lookat(pt);
+    x -= 0.001;
+    y -= 0.001;
+    ptr->set_eye(Point3D(x,y,z));
+    ptr->set_lookat(target);
     ptr->set_up_vector(0, 0, 1);
     ptr->compute_uvw();
     w->set_camera(ptr);
@@ -1315,7 +1329,7 @@ void set_viewpoint(World* w, Point3D& pt, int view_choice, float width, float he
 
 void build_transparent_world(World* w) {
     Point3D ball(0,0,50);
-    set_viewpoint(w, ball, 0, 200, 300);
+    set_viewpoint(w, ball, OVERHEAD, 200, 300);
     w->init_viewplane();
     w->init_ambient_light(0.4);
 
@@ -1331,41 +1345,22 @@ void build_transparent_world(World* w) {
 
 }
 
-void build_working_desk_world(World* w, int choice) {
+void build_working_desk_world(World* w, VIEWPOINT choice) {
     //1.Camera
-    Pinhole* ptr = new Pinhole;
+    Point3D target = Point3D(-5,0,10);
+
     //1.1.Eye at
-    switch(choice) {
-        case -1:ptr->set_eye(5, 0, 50);     break;  //min-top 0.0.50
-        case 0: ptr->set_eye(20, 0, 250);   break;  //top
-        case 1: ptr->set_eye(-150, 0, 21);  break;  //front
-        case 2: ptr->set_eye(0, -300, 21);  break;  //side
-        case 3: ptr->set_eye(250, 0, 23);   break;  // back
-    }
-    //1.2.Look at
-    ptr->set_lookat(0, 0, 10);
-
-    //1.3.Viewing distance
-    ptr->set_view_distance(250);
-
-    //1.4.Normal vector
-    ptr->set_up_vector(0, 0, 1);
-    ptr->compute_uvw();
-    w->set_camera(ptr);
+    set_viewpoint(w, target, choice, 250, 250);
 
     //2.Viewplane ft. Light
     w->init_viewplane();
+
+    //3.Light
     w->init_ambient_light(0.4);
     Directional* lt = new Directional;
     lt->set_shadows(true);
 
-    switch(choice) {
-        case -1:lt->set_direction(50, 50, 100);     break;  //min-top 0.0.50
-        case 0: lt->set_direction(50, 50, 100);     break;  //top
-        case 1: lt->set_direction(-150, 10, 150);   break;  //front
-        case 2: lt->set_direction(30, -50, 60);     break;  //side
-        case 3: lt->set_direction(30, -20, 80);     break;  //back
-    }
+    lt->set_direction(50, 50, 100);
     lt->scale_radiance(11.0);
     w->add_light(lt);
 
@@ -1378,25 +1373,114 @@ void build_working_desk_world(World* w, int choice) {
 void add_bb_to_compound(World* w, Compound* cp, RGBColor color,
                         Point3D p0, double dx, double dy, double dz) {
     Point3D p1 = Point3D(p0.x + dx, p0.y + dy, p0.z + dz);
-    BeveledBox* bb = new BeveledBox(p0, p1, 0);
+    BeveledBox* bb = new BeveledBox(p0, p1, 0.2);
     w->set_material(bb, color);
     cp->add_object(bb);
 }
+#define KEY_WIDTH 4
+#define KEY_LENGTH 4
+#define KEY_SPACE 2
+#define KEY_HEIGHT 2
+#define KEY_SPACING 6
+#define KEY_HALF_WIDTH 2
+#define KEY_1_WIDTH 1
+#define KEY_1_LENGTH 1
+#define KEY_HALF_LENGTH 2
+#define KEY_HEIGHT 2
+
 void build_working_desk(World* w) {
     //1.Ground - big checkerboard
     //============================================================
-    Plane* plane = new Plane(Point3D(-30, -30, 0), Normal(0, 0, 1));
-    build_checkerboard(plane, grey, white, 8);
-    Instance* planer = new Instance(plane);
-    planer->translate(Point3D(0,0,-80));
-    w->add_object(planer);
+    //Plane* plane = new Plane(Point3D(-30, -30, 0), Normal(0, 0, 1));
+    //build_checkerboard(plane, grey, white, 8);
+    //Instance* planer = new Instance(plane);
+    //planer->translate(Point3D(0,0,-80));
+    //w->add_object(planer);
+
     //============================================================
     //2.Flat Matte Keyboard
     Compound* cpkeyboard = new Compound();
-    for (int i = 0; i < 10; i += 1) { //SPACING = 5, preset above
-        add_bb_to_compound(w, cpkeyboard, cyan, Point3D( i*SPACING, 0, 0), 4, 4, 2); //1st row
-    }
     Instance* iskeyboard = new Instance(cpkeyboard);
+    int key_row = 0;
+    int key_column = 0;
+    int key_height = 0;
+    RGBColor menu_key_color = cyan;
+    RGBColor normal_key_color = darkDarkGrey;
+    //1st - menu
+    for (int i = 0; i < 14; i += 1) //SPACING = 5, preset above //x-ver, y-hor, z-up
+        add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                           Point3D( key_row * KEY_SPACING, key_column + i * KEY_SPACING, key_height),
+                           KEY_HALF_WIDTH, KEY_LENGTH, KEY_HEIGHT);
+
+    //2nd - #
+    key_row++;
+    //1st key of
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                       Point3D( key_row * (KEY_HALF_WIDTH + KEY_SPACE), key_column, key_height),
+                       KEY_WIDTH, KEY_HALF_LENGTH, KEY_HEIGHT);
+    key_column++;
+    for (int i = 0; i < 12; i += 1) //12 keys
+        add_bb_to_compound(w, cpkeyboard, normal_key_color,
+        Point3D( key_row * (KEY_HALF_WIDTH + KEY_SPACE), key_column * (KEY_HALF_LENGTH + KEY_SPACE) + i * KEY_SPACING, key_height),
+        KEY_WIDTH, KEY_LENGTH, KEY_HEIGHT);
+    //last key
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+    Point3D( key_row * (KEY_HALF_WIDTH + KEY_SPACE), key_column * (KEY_HALF_LENGTH + KEY_SPACE) + 12 * KEY_SPACING, key_height),
+    KEY_WIDTH, KEY_LENGTH + KEY_HALF_LENGTH, KEY_HEIGHT);
+
+    //3rd - qwe...
+    key_row++; key_column = 0;
+    for (int i = 0; i < 14; i += 1) {//13 keys
+        RGBColor color = (i==0 || i==13) ? menu_key_color : normal_key_color;
+        add_bb_to_compound(w, cpkeyboard, color,
+        Point3D( key_row * KEY_SPACING - KEY_HALF_WIDTH, key_column * (KEY_LENGTH + KEY_SPACE) + i * KEY_SPACING, key_height),
+        KEY_WIDTH, KEY_LENGTH, KEY_HEIGHT);
+    }
+
+    //4th - asd...
+    key_row++;
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                       Point3D( key_row * KEY_SPACING - KEY_HALF_WIDTH, key_column, key_height),
+                       KEY_WIDTH, KEY_LENGTH + KEY_HALF_LENGTH, KEY_HEIGHT);
+    for (int i = 0; i < 11; i += 1)
+        add_bb_to_compound(w, cpkeyboard, normal_key_color,
+        Point3D( key_row * KEY_SPACING - KEY_HALF_WIDTH, KEY_SPACING + KEY_HALF_LENGTH + i * KEY_SPACING, key_height),
+        KEY_WIDTH, KEY_LENGTH, KEY_HEIGHT);
+    //last key
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                       Point3D( key_row * KEY_SPACING - KEY_HALF_WIDTH, KEY_SPACING + KEY_HALF_LENGTH + 11 * KEY_SPACING, key_height),
+                       KEY_WIDTH, KEY_LENGTH + KEY_LENGTH, KEY_HEIGHT);
+
+    //5th - zxc...
+    key_row++;
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                       Point3D( key_row * KEY_SPACING - KEY_HALF_WIDTH, key_column, key_height),
+                       KEY_WIDTH, KEY_LENGTH + KEY_LENGTH, KEY_HEIGHT);
+    for (int i = 0; i < 10; i += 1)
+        add_bb_to_compound(w, cpkeyboard, normal_key_color,
+        Point3D( key_row * KEY_SPACING - KEY_HALF_WIDTH, KEY_SPACING + KEY_LENGTH + i * KEY_SPACING, key_height),
+        KEY_WIDTH, KEY_LENGTH, KEY_HEIGHT);
+    //last key
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                       Point3D( key_row * KEY_SPACING - KEY_HALF_WIDTH, KEY_SPACING + KEY_LENGTH + 10 * KEY_SPACING, key_height),
+                       KEY_WIDTH, KEY_LENGTH + KEY_LENGTH + KEY_LENGTH, KEY_HEIGHT);
+
+    //6th - options/functions
+    key_row++;
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                       Point3D( key_row * KEY_SPACING - KEY_1_WIDTH, key_column, key_height),
+                       KEY_WIDTH + KEY_1_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
+/*    key_column++;
+    for (int i = 0; i < 3; i += 1)
+        add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                           Point3D( key_row * KEY_SPACING, key_column, key_height),
+                           KEY_WIDTH + KEY_HALF_WIDTH, KEY_LENGTH, KEY_HEIGHT);
+    add_bb_to_compound(w, cpkeyboard, cyan, Point3D( 5*SPACING, 13 + 3*SPACING, 0), 4, 24, 2);//space key
+    for (int i = 0; i < 2; i += 1)
+        add_bb_to_compound(w, cpkeyboard, cyan, Point3D( 5*SPACING, 53 + i*SPACING, 0), 4, 4, 2); //alt ctrl
+*/
+    iskeyboard->rotate_z(-135);
+    iskeyboard->translate(-65, -65, 0);
     //============================================================
     //3.Glossy Apple Pen
     Compound* cppen = new Compound();
@@ -1416,12 +1500,12 @@ void build_working_desk(World* w) {
     //============================================================
     //7.Matte table
     Compound* cptable = new Compound();
+    Instance* istable = new Instance(cptable);
     cptable->add_object(iskeyboard);
     cptable->add_object(ispen);
     cptable->add_object(isglass);
     cptable->add_object(isbook);
     cptable->add_object(islamp);
-    Instance* istable = new Instance(cptable);
     //============================================================
     //8.Matte chair
     Compound* cpchair = new Compound();
