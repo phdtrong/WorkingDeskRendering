@@ -1394,7 +1394,7 @@ void build_working_desk(World* w) {
     Plane* plane = new Plane(Point3D(-30, -30, 0), Normal(0, 0, 1));
     build_checkerboard(plane, grey, white, 8);
     Instance* planer = new Instance(plane);
-    planer->translate(Point3D(0,0,-40));
+    //planer->translate(Point3D(0,0,-40));
     w->add_object(planer);
 
     //============================================================
@@ -1493,7 +1493,7 @@ void build_working_desk(World* w) {
     7 * KEY_SPACING - KEY_HALF_WIDTH, 14 * KEY_SPACING + KEY_HALF_LENGTH, KEY_1_HEIGHT);
 
     iskeyboard->rotate_z(-135);
-    iskeyboard->translate(-65, -65, 0);
+    iskeyboard->translate(-35, -35, 35);
     //============================================================
     //3.Glossy Apple Pen
     Compound* cppen = new Compound();
