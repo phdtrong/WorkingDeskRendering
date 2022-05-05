@@ -2,6 +2,7 @@
 #include "World_builder.h"
 #include "Materials/Reflective.h"
 #include "Materials/Transparent.h"
+#include "Materials/GlossyReflector.h"
 
 #include "Cameras/Fisheye.h"
 #include "Cameras/Pinhole.h"
@@ -21,7 +22,7 @@
 #include "GeometricObjects/CompoundObjects/ThickRing.h"
 
 #include "GeometricObjects/PartObjects/ConvexPartSphere.h"
-
+#include "GeometricObjects/PartObjects/OpenPartCylinder.h"
 #include "GeometricObjects/Triangles/Triangle.h"
 
 #include "GeometricObjects/Primitives/Plane.h"
@@ -1377,6 +1378,7 @@ void add_bb_to_compound(World* w, Compound* cp, RGBColor color,
     w->set_material(bb, color);
     cp->add_object(bb);
 }
+
 #define KEY_WIDTH 4
 #define KEY_LENGTH 4
 #define KEY_SPACE 2
@@ -1395,7 +1397,7 @@ void build_working_desk(World* w) {
     build_checkerboard(plane, grey, white, 8);
     Instance* planer = new Instance(plane);
     //planer->translate(Point3D(0,0,-40));
-    w->add_object(planer);
+    //w->add_object(planer);
 
     //============================================================
     //2.Flat Matte Keyboard
@@ -1498,6 +1500,35 @@ void build_working_desk(World* w) {
     //3.Glossy Apple Pen
     Compound* cppen = new Compound();
     Instance* ispen = new Instance(cppen);
+    //pen-body
+    Instance* ispen_body = new Instance(new SolidCylinder(0, 10 * KEY_SPACING, 1.3 * KEY_1_WIDTH));
+    w->set_material(ispen_body,white);
+    cppen->add_object(ispen_body);
+    //pen-head-curve
+    Instance* ispen_head_curve = new Instance(new SolidCone(KEY_SPACING, 1.3 * KEY_1_WIDTH));
+    w->set_material(ispen_head_curve, white);
+    ispen_head_curve->rotate_x(180);
+    cppen->add_object(ispen_head_curve);
+    //pen-head-pin
+    Instance* ispen_head_pin = new Instance(new SolidCone(KEY_SPACING, 1.0 * KEY_1_WIDTH));
+    w->set_material(ispen_head_pin, grey);
+    ispen_head_pin->rotate_x(180);
+    ispen_head_pin->translate(0,-1.0,0);
+    cppen->add_object(ispen_head_pin);
+    //pen-body-liner
+    Instance* ispen_body_liner = new Instance(new SolidCylinder(0,3,1.31*KEY_1_WIDTH));
+    w->set_material(ispen_body_liner, grey);
+    ispen_body_liner->translate(0, 9.0*KEY_SPACING, 0);
+    cppen->add_object(ispen_body_liner);
+
+    //pen-tail
+    Instance* ispen_tail = new Instance(new Sphere(Point3D(0,10*KEY_SPACING,0), 1.3*KEY_1_WIDTH));
+    w->set_material(ispen_tail, white);
+    cppen->add_object(ispen_tail);
+
+    ispen->rotate_z(-135);
+    ispen->translate(-50, 10, 20);
+
     //============================================================
     //4.Transparent Glass cup
     Compound* cpglass = new Compound();
@@ -1514,8 +1545,8 @@ void build_working_desk(World* w) {
     //7.Matte table
     Compound* cptable = new Compound();
     Instance* istable = new Instance(cptable);
-    cptable->add_object(iskeyboard);
-    cptable->add_object(ispen);
+    cptable->add_object(iskeyboard); //done
+    cptable->add_object(ispen); //done
     cptable->add_object(isglass);
     cptable->add_object(isbook);
     cptable->add_object(islamp);
