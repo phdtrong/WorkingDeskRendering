@@ -1485,7 +1485,7 @@ void build_working_desk(World* w) {
         KEY_HALF_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
     //up
     add_bb_to_compound(w, cpkeyboard, menu_key_color,
-    Point3D( key_row * KEY_SPACING - 2*KEY_1_WIDTH, 7 * KEY_SPACING+ 7 * KEY_1_LENGTH + (3) * KEY_SPACING+ (3) * KEY_1_LENGTH, key_height),
+    Point3D( key_row * KEY_SPACING - 1*KEY_1_WIDTH, 7 * KEY_SPACING+ 7 * KEY_1_LENGTH + (3) * KEY_SPACING+ (3) * KEY_1_LENGTH, key_height),
     KEY_HALF_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
 
     //cover pad
