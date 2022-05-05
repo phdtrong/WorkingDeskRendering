@@ -1387,15 +1387,15 @@ void add_bb_to_compound(World* w, Compound* cp, RGBColor color,
 #define KEY_1_LENGTH 1
 #define KEY_HALF_LENGTH 2
 #define KEY_HEIGHT 2
-
+#define KEY_1_HEIGHT 1
 void build_working_desk(World* w) {
     //1.Ground - big checkerboard
     //============================================================
-    //Plane* plane = new Plane(Point3D(-30, -30, 0), Normal(0, 0, 1));
-    //build_checkerboard(plane, grey, white, 8);
-    //Instance* planer = new Instance(plane);
-    //planer->translate(Point3D(0,0,-80));
-    //w->add_object(planer);
+    Plane* plane = new Plane(Point3D(-30, -30, 0), Normal(0, 0, 1));
+    build_checkerboard(plane, grey, white, 8);
+    Instance* planer = new Instance(plane);
+    planer->translate(Point3D(0,0,-40));
+    w->add_object(planer);
 
     //============================================================
     //2.Flat Matte Keyboard
@@ -1467,18 +1467,31 @@ void build_working_desk(World* w) {
 
     //6th - options/functions
     key_row++;
-    add_bb_to_compound(w, cpkeyboard, menu_key_color,
-                       Point3D( key_row * KEY_SPACING - KEY_1_WIDTH, key_column, key_height),
-                       KEY_WIDTH + KEY_1_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
-/*    key_column++;
+    for (int i = 0; i < 4; i += 1)
+        add_bb_to_compound(w, cpkeyboard, menu_key_color,
+                           Point3D( key_row * KEY_SPACING - KEY_1_WIDTH,  i * (KEY_SPACING+KEY_1_LENGTH), key_height),
+                           KEY_WIDTH + KEY_1_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
+    add_bb_to_compound(w, cpkeyboard, normal_key_color,
+    Point3D( key_row * KEY_SPACING - KEY_1_WIDTH,  4 * (KEY_SPACING+KEY_1_LENGTH), key_height),
+    KEY_WIDTH + KEY_1_WIDTH, 5 * KEY_LENGTH, KEY_HEIGHT);
+    for (int i = 0; i < 2; i += 1)
+        add_bb_to_compound(w, cpkeyboard, menu_key_color,
+        Point3D( key_row * KEY_SPACING - KEY_1_WIDTH, 7 * KEY_SPACING+ 8 * KEY_1_LENGTH + i * (KEY_SPACING+KEY_1_LENGTH), key_height),
+        KEY_WIDTH + KEY_1_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
+    //left, right, down
     for (int i = 0; i < 3; i += 1)
         add_bb_to_compound(w, cpkeyboard, menu_key_color,
-                           Point3D( key_row * KEY_SPACING, key_column, key_height),
-                           KEY_WIDTH + KEY_HALF_WIDTH, KEY_LENGTH, KEY_HEIGHT);
-    add_bb_to_compound(w, cpkeyboard, cyan, Point3D( 5*SPACING, 13 + 3*SPACING, 0), 4, 24, 2);//space key
-    for (int i = 0; i < 2; i += 1)
-        add_bb_to_compound(w, cpkeyboard, cyan, Point3D( 5*SPACING, 53 + i*SPACING, 0), 4, 4, 2); //alt ctrl
-*/
+        Point3D( key_row * KEY_SPACING + KEY_HALF_WIDTH, 7 * KEY_SPACING+ 8 * KEY_1_LENGTH + (i+2) * KEY_SPACING+ (i+1) * KEY_1_LENGTH, key_height),
+        KEY_HALF_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
+    //up
+    add_bb_to_compound(w, cpkeyboard, menu_key_color,
+    Point3D( key_row * KEY_SPACING - 2*KEY_1_WIDTH, 7 * KEY_SPACING+ 7 * KEY_1_LENGTH + (3) * KEY_SPACING+ (3) * KEY_1_LENGTH, key_height),
+    KEY_HALF_WIDTH, KEY_LENGTH + KEY_1_LENGTH, KEY_HEIGHT);
+
+    //cover pad
+    add_bb_to_compound(w, cpkeyboard, grey,Point3D(-2,-1,0),
+    7 * KEY_SPACING - KEY_HALF_WIDTH, 14 * KEY_SPACING + KEY_HALF_LENGTH, KEY_1_HEIGHT);
+
     iskeyboard->rotate_z(-135);
     iskeyboard->translate(-65, -65, 0);
     //============================================================
