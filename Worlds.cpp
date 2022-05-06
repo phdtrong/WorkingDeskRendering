@@ -1493,9 +1493,10 @@ void build_working_desk(World* w) {
     //cover pad
     add_bb_to_compound(w, cpkeyboard, grey,Point3D(-2,-1,0),
     7 * KEY_SPACING - KEY_HALF_WIDTH, 14 * KEY_SPACING + KEY_HALF_LENGTH, KEY_1_HEIGHT);
-
-    iskeyboard->rotate_z(-135);
-    iskeyboard->translate(-35, -35, 35);
+    //okay, so what is origin-relative position of the keyboard? (x/2, y/2, z/2)
+    iskeyboard->translate( - ( 7 * KEY_SPACING - KEY_HALF_WIDTH - (-2) ) / 2,
+                           - (14 * KEY_SPACING + KEY_HALF_LENGTH - (-1) ) / 2,
+                           - (KEY_1_HEIGHT - 0) / 2);
     //============================================================
     //3.Glossy Apple Pen
     Compound* cppen = new Compound();
@@ -1516,27 +1517,32 @@ void build_working_desk(World* w) {
     ispen_head_pin->translate(0,-1.0,0);
     cppen->add_object(ispen_head_pin);
     //pen-body-liner
-    Instance* ispen_body_liner = new Instance(new SolidCylinder(0,3,1.31*KEY_1_WIDTH));
+    Instance* ispen_body_liner = new Instance(new SolidCylinder(0, 3, 1.301*KEY_1_WIDTH));
     w->set_material(ispen_body_liner, grey);
     ispen_body_liner->translate(0, 9.3*KEY_SPACING, 0);
     cppen->add_object(ispen_body_liner);
-
     //pen-tail
     Instance* ispen_tail = new Instance(new Sphere(Point3D(0,10.5*KEY_SPACING,0), 1.3*KEY_1_WIDTH));
     w->set_material(ispen_tail, white);
     cppen->add_object(ispen_tail);
-
-    ispen->rotate_z(-135);
-    ispen->translate(-50, 10, 20);
-
+    //okay, so what is origin-relative position of the pen? (x/2, y/2, z/2)
+    ispen->translate(-( 1.3*KEY_1_WIDTH ) / 2,
+                     -( 10.5 * KEY_SPACING + 1.3 * KEY_1_WIDTH) / 2,
+                     -( 0 ) / 2);
     //============================================================
     //4.Transparent Glass cup
     Compound* cpglass = new Compound();
     Instance* isglass = new Instance(cpglass);
     //============================================================
-    //5.Phong book
-    Compound* cpbook = new Compound();
-    Instance* isbook = new Instance(cpbook);
+    //5.Reflective phone
+    //Reflect
+    std::shared_ptr<Reflective> ptr_reflect = std::make_shared<Reflective>();
+    ptr_reflect->set_kr(1.5);
+    ptr_reflect->set_ka(0.25);
+    ptr_reflect->set_kd(0.75);
+
+    Compound* cpphone = new Compound();
+    Instance* isphone = new Instance(cpphone);
     //============================================================
     //6.Glossy (area light) lamp
     Compound* cplamp = new Compound();
@@ -1545,10 +1551,19 @@ void build_working_desk(World* w) {
     //7.Matte table
     Compound* cptable = new Compound();
     Instance* istable = new Instance(cptable);
+
+    //7.1.keyboard visualization
+    iskeyboard->rotate_z(-135);
+    iskeyboard->translate(-40, -90, 35);
+
+    //7.2.apple pen visualization
+    ispen->rotate_z(-45);
+    ispen->translate(15, -120, 35);
+
     cptable->add_object(iskeyboard); //done
     cptable->add_object(ispen); //done
     cptable->add_object(isglass);
-    cptable->add_object(isbook);
+    cptable->add_object(isphone);
     cptable->add_object(islamp);
     //============================================================
     //8.Matte chair
