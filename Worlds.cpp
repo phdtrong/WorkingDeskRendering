@@ -1501,7 +1501,7 @@ void build_working_desk(World* w) {
     Compound* cppen = new Compound();
     Instance* ispen = new Instance(cppen);
     //pen-body
-    Instance* ispen_body = new Instance(new SolidCylinder(0, 10 * KEY_SPACING, 1.3 * KEY_1_WIDTH));
+    Instance* ispen_body = new Instance(new SolidCylinder(0, 10.5 * KEY_SPACING, 1.3 * KEY_1_WIDTH));
     w->set_material(ispen_body,white);
     cppen->add_object(ispen_body);
     //pen-head-curve
@@ -1518,11 +1518,11 @@ void build_working_desk(World* w) {
     //pen-body-liner
     Instance* ispen_body_liner = new Instance(new SolidCylinder(0,3,1.31*KEY_1_WIDTH));
     w->set_material(ispen_body_liner, grey);
-    ispen_body_liner->translate(0, 9.0*KEY_SPACING, 0);
+    ispen_body_liner->translate(0, 9.3*KEY_SPACING, 0);
     cppen->add_object(ispen_body_liner);
 
     //pen-tail
-    Instance* ispen_tail = new Instance(new Sphere(Point3D(0,10*KEY_SPACING,0), 1.3*KEY_1_WIDTH));
+    Instance* ispen_tail = new Instance(new Sphere(Point3D(0,10.5*KEY_SPACING,0), 1.3*KEY_1_WIDTH));
     w->set_material(ispen_tail, white);
     cppen->add_object(ispen_tail);
 
