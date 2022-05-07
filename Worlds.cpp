@@ -32,6 +32,7 @@
 
 #include "Lights/Directional.h"
 #include "Lights/PointLight.h"
+#include "Lights/AreaLight.h"
 
 #include "Materials/Matte.h"
 #include "Materials/SV_Matte.h"
@@ -1310,14 +1311,16 @@ void set_viewpoint(World* w, Point3D& target, VIEWPOINT view_choice, double dist
     Point3D origin = Point3D(0,0,0);
     add_bb_helper(w,red,origin,30,2,1);//x
     add_bb_helper(w,darkBlue,origin,2,30,1);//y
-
+//enum VIEWPOINT {OVERHEAD, FRONT, BACK, LEFT, LEFT_TOP, RIGHT, RIGHT_TOP, UNDERNEATH };
     switch(view_choice) {
         case OVERHEAD:      z+=distance; break;
         case UNDERNEATH:    z-=distance; break;
         case FRONT:         x+=distance; break;//y
         case BACK:          x-=distance; break;//y
         case LEFT:          y-=distance; break;//x
+        case LEFT_TOP:      y-=distance; z+=distance*2/3; break;//x
         case RIGHT:         y+=distance; break;//x
+        case RIGHT_TOP:     y+=distance; z+=distance*2/3; break;//x
         default: throw new std::invalid_argument("Invalid choice\n"); break;
     }
     x -= 0.001;
@@ -1349,7 +1352,7 @@ void build_transparent_world(World* w) {
 
 void build_working_desk_world(World* w, VIEWPOINT choice) {
     //1.Camera
-    Point3D target = Point3D(-5,0,10);
+    Point3D target = Point3D(-5,0,20);
 
     //1.1.Eye at
     set_viewpoint(w, target, choice, 250, 250);
@@ -1358,12 +1361,12 @@ void build_working_desk_world(World* w, VIEWPOINT choice) {
     w->init_viewplane();
 
     //3.Light
-    w->init_ambient_light(0.7);//0.4
+    w->init_ambient_light(1.8);//0.4
     Directional* lt = new Directional;
     lt->set_shadows(true);
 
     lt->set_direction(50, 50, 100);
-    lt->scale_radiance(1.0);//11.0
+    lt->scale_radiance(2.5);////11.0
     w->add_light(lt);
 
     //3.Rays
@@ -1376,10 +1379,23 @@ void add_bb_to_compound(World* w, Compound* cp, RGBColor color,
                         Point3D p0, double dx, double dy, double dz) {
     Point3D p1 = Point3D(p0.x + dx, p0.y + dy, p0.z + dz);
     BeveledBox* bb = new BeveledBox(p0, p1, 0.2);
-    w->set_material(bb, color);
+    w->set_material(bb, color);//w->set_material(bb, color);
     cp->add_object(bb);
 }
-
+void add_bb_to_compound(World* w, Compound* cp, MATERIAL_CHOICE choice, RGBColor color,
+                        Point3D p0, double dx, double dy, double dz) {
+    Point3D p1 = Point3D(p0.x + dx, p0.y + dy, p0.z + dz);
+    BeveledBox* bb = new BeveledBox(p0, p1, 0.2);
+    w->set_material(bb, choice, color);//w->set_material(bb, color);
+    cp->add_object(bb);
+}
+void add_curved_bb_to_compound(World* w, Compound* cp, MATERIAL_CHOICE choice, RGBColor color,
+                        Point3D p0, double dx, double dy, double dz, double curve) {
+    Point3D p1 = Point3D(p0.x + dx, p0.y + dy, p0.z + dz);
+    BeveledBox* bb = new BeveledBox(p0, p1, curve);
+    w->set_material(bb, choice, color);//w->set_material(bb, color);
+    cp->add_object(bb);
+}
 #define KEY_WIDTH 4
 #define KEY_LENGTH 4
 #define KEY_SPACE 2
@@ -1391,6 +1407,10 @@ void add_bb_to_compound(World* w, Compound* cp, RGBColor color,
 #define KEY_HALF_LENGTH 2
 #define KEY_HEIGHT 2
 #define KEY_1_HEIGHT 1
+#define COUNTER_TOP_LATTITUDE 20
+#define TABLE_LENGTH_TIMES 30
+#define TABLE_WIDTH_TIMES 20
+
 void build_working_desk(World* w) {
     //1.Ground - big checkerboard
     //============================================================
@@ -1398,7 +1418,6 @@ void build_working_desk(World* w) {
     build_checkerboard(plane, grey, white, 8);
     Instance* planer = new Instance(plane);
     planer->translate(Point3D(0,0,-40));
-    w->add_object(planer);
 
     //============================================================
     //2.Flat Matte Keyboard
@@ -1502,6 +1521,7 @@ void build_working_desk(World* w) {
     iskeyboard->translate( 0,
                            0,
                            0);
+
     //============================================================
     //3.Glossy Apple Pen
     Compound* cppen = new Compound();
@@ -1516,13 +1536,13 @@ void build_working_desk(World* w) {
     ispen_head_curve->rotate_x(180);
     cppen->add_object(ispen_head_curve);
     //pen-head-pin
-    Instance* ispen_head_pin = new Instance(new SolidCone(KEY_SPACING, 1.0 * KEY_1_WIDTH));
+    Instance* ispen_head_pin = new Instance(new SolidCone(KEY_SPACING, 1.00001 * KEY_1_WIDTH));
     w->set_material(ispen_head_pin, PHONG, grey);
     ispen_head_pin->rotate_x(180);
     ispen_head_pin->translate(0,-1.0,0);
     cppen->add_object(ispen_head_pin);
     //pen-body-liner
-    Instance* ispen_body_liner = new Instance(new SolidCylinder(0, 3, 1.301*KEY_1_WIDTH));
+    Instance* ispen_body_liner = new Instance(new SolidCylinder(0, 3, 1.30001*KEY_1_WIDTH));
     w->set_material(ispen_body_liner, PHONG, grey);
     ispen_body_liner->translate(0, 9.3*KEY_SPACING, 0);
     cppen->add_object(ispen_body_liner);
@@ -1538,6 +1558,7 @@ void build_working_desk(World* w) {
     ispen->translate( 0,
                       0,
                       +(1.3*KEY_1_WIDTH) / 2);
+
     //============================================================
     //4.Transparent Glass cup
     Compound* cpglass = new Compound();
@@ -1554,50 +1575,137 @@ void build_working_desk(World* w) {
 
     //okay, so what is origin-relative position of the pen? (x/2, y/2, z/2)
     w->set_material(isglass, PHONG, red);
-    isglass->translate(-0,
-                       -( 5 * KEY_SPACING + 0.5*KEY_1_WIDTH ) / 2,
-                      -0);
+    isglass->translate( -0,
+                        -( 5 * KEY_SPACING + 0.5*KEY_1_WIDTH ) / 2,
+                        -0);
     //okay, let put it all in surface of z=0 now
-    isglass->translate( 0,
+    isglass->translate( +0,
+                        +( 5 * KEY_SPACING + 0.5*KEY_1_WIDTH ) / 2,
+                        +0);
+
+    //============================================================
+    //5.Reflective iPad
+    Compound* cpiPad = new Compound();
+    Instance* isiPad = new Instance(cpiPad);
+    //cover
+    add_curved_bb_to_compound(w, cpiPad, MATTE, white,
+    Point3D(-5 * KEY_SPACING, -7 * KEY_SPACING, 0),
+    +10 * KEY_SPACING, +14 * KEY_SPACING, 2 * KEY_1_WIDTH, 1.0);
+    //screen
+    //outer-layer/surface
+    add_bb_to_compound(w, cpiPad, PHONG, white,
+    Point3D(-4.9999 * KEY_SPACING, -6.9999 * KEY_SPACING, 2.0 * KEY_1_WIDTH),
+    +9.9999 * KEY_SPACING, +13.9999 * KEY_SPACING, 0.001 * KEY_1_WIDTH);
+    //lcd screen
+    add_bb_to_compound(w, cpiPad, REFLECTIVE, black,
+    Point3D(-4.6 * KEY_SPACING, -5.5 * KEY_SPACING, 2 * KEY_1_WIDTH),
+    +9.2 * KEY_SPACING, +11 * KEY_SPACING, 0.002 * KEY_1_WIDTH);
+    //camera
+    Instance* isiPad_camera = new Instance(new Disk(Point3D(0, 6.25 * KEY_SPACING, 2.01 * KEY_1_WIDTH),
+                                                   Normal(0,0,1),0.15 * KEY_SPACING));
+    w->set_material(isiPad_camera, REFLECTIVE, black);
+    cpiPad->add_object(isiPad_camera);
+    //home button
+    Instance* isiPad_home = new Instance(new Disk(Point3D(0, -6.25 * KEY_SPACING, 2.01 * KEY_1_WIDTH),
+                                                   Normal(0,0,1),0.5 * KEY_SPACING));
+    Instance* isiPad_home_inner = new Instance(new Disk(Point3D(0, -6.25 * KEY_SPACING, 2.02 * KEY_1_WIDTH),
+                                                   Normal(0,0,1),0.48 * KEY_SPACING));
+    w->set_material(isiPad_home, MATTE, black);
+    w->set_material(isiPad_home_inner, MATTE, white);
+    cpiPad->add_object(isiPad_home);
+    cpiPad->add_object(isiPad_home_inner);
+    //okay, let put it all in surface of z=0 now
+    isiPad->translate(  0,
                         0,
                         0);
-    //============================================================
-    //5.Reflective phone
 
-    Compound* cpphone = new Compound();
-    Instance* isphone = new Instance(cpphone);
     //============================================================
     //6.Glossy (area light) lamp
     Compound* cplamp = new Compound();
     Instance* islamp = new Instance(cplamp);
+
+    //lamp base
+    Instance* islamp_base = new Instance(new SolidCylinder(0, 0.75 * KEY_SPACING, 1.25*KEY_SPACING));
+    w->set_material(islamp_base, PHONG, orange);
+    cplamp->add_object(islamp_base);
+    islamp_base->rotate_x(+90);
+    islamp_base->translate(-35, 65, COUNTER_TOP_LATTITUDE);
+    //lamp stand
+    Instance* islamp_stand = new Instance(new SolidCylinder(0, 7 * KEY_SPACING, 0.20*KEY_SPACING));
+    w->set_material(islamp_stand, PHONG, orange);
+    cplamp->add_object(islamp_stand);
+    islamp_stand->rotate_x(+90);
+    islamp_stand->translate(-35, 65, COUNTER_TOP_LATTITUDE);
+    //lamp ball
+    Instance* islamp_ball = new Instance(new Sphere(Point3D(0,0,0),0.5*KEY_SPACING));
+    w->set_material(islamp_ball, REFLECTIVE, white);
+    cplamp->add_object(islamp_ball);
+    islamp_ball->translate(-35, 65, COUNTER_TOP_LATTITUDE + 7 * KEY_SPACING);
+    //lamp ball with light
+    Directional* el = new Directional();
+    el->set_direction(-35, 60, COUNTER_TOP_LATTITUDE + 6.5 * KEY_SPACING);
+    el->set_shadows(true);
+    el->scale_radiance(6.0);
+
+    //lamp ball cover
+    Instance* islamp_ball_cover = new Instance(new OpenCone(3*KEY_SPACING, 3.5*KEY_SPACING));
+    w->set_material(islamp_ball_cover, PHONG, cyan);
+    cplamp->add_object(islamp_ball_cover);
+    islamp_ball_cover->rotate_x(+90);
+    islamp_ball_cover->translate(-35, 65, COUNTER_TOP_LATTITUDE + 6.7 * KEY_SPACING);
+
     //============================================================
     //7.Matte table
     Compound* cptable = new Compound();
     Instance* istable = new Instance(cptable);
 
+    //counter top
+    add_curved_bb_to_compound(w, cptable, PHONG, darkYellow,
+    Point3D(-TABLE_WIDTH_TIMES/2 * KEY_SPACING,
+            -TABLE_LENGTH_TIMES/2 * KEY_SPACING, COUNTER_TOP_LATTITUDE - 7 * KEY_1_WIDTH),
+                +TABLE_WIDTH_TIMES * KEY_SPACING,
+                +TABLE_LENGTH_TIMES * KEY_SPACING, 7 * KEY_1_WIDTH,
+                    0.5);
+    //table stand
+    Instance* istable_stand = new Instance (new
+                        SolidCylinder(0, COUNTER_TOP_LATTITUDE - 7 * KEY_1_WIDTH, 2 * KEY_SPACING));
+    istable_stand->rotate_x(+90);
+    w->set_material(istable_stand, PHONG, green);
+    cptable->add_object(istable_stand);
+
+    //okay, let put it all in surface of z=0 now
+    istable->translate( 0,
+                        0,
+                        0);
+
     //7.1.keyboard visualization
-    iskeyboard->rotate_z(-135);
-    iskeyboard->translate(-40, -90, 20);
+    iskeyboard->rotate_z(-180);
+    iskeyboard->translate(-40, -40, COUNTER_TOP_LATTITUDE);//relative-table visualization
 
     //7.2.apple pen visualization
-    ispen->rotate_z(-45);
-    ispen->translate(15, -120, 20);
+    ispen->rotate_z(-50);
+    ispen->translate(15, -50, COUNTER_TOP_LATTITUDE);
 
     //7.3.glass cup visualization
     isglass->rotate_x(+90);
-    isglass->translate(10, -80, 20);
+    isglass->translate(40, -60, COUNTER_TOP_LATTITUDE);
+
+    //7.4.iPad visualization
+    isiPad->translate(15, 25, COUNTER_TOP_LATTITUDE);
 
     cptable->add_object(iskeyboard); //done
     cptable->add_object(ispen); //done
     cptable->add_object(isglass); //done
-    cptable->add_object(isphone);
-    cptable->add_object(islamp);
+    cptable->add_object(isiPad); //done
+    cptable->add_object(islamp); //done
     //============================================================
     //8.Matte chair
     Compound* cpchair = new Compound();
     Instance* ischair = new Instance(cpchair);
     //============================================================
     //9.Closing up
-    w->add_object(istable);
-    w->add_object(ischair);
+    w->add_light(el); //light
+    w->add_object(istable); //table
+    w->add_object(ischair); //chair
+    w->add_object(planer);
 }
