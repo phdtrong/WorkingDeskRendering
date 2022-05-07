@@ -46,7 +46,7 @@
 #include "Tracers/RayCast.h"
 
 #include "World/Worlds.h"
-
+#include "World/World.h"
 
 RGBColor lightRed(1, 0.4, 0.4);
 RGBColor darkRed(0.9, 0.1, 0.1);
@@ -1286,16 +1286,17 @@ void build_transparent(World* w, const Point3D& ball) {
     build_checkerboard(plane, grey, white, 20);
     w->add_object(plane);
 
-    std::shared_ptr<Transparent> glass = std::make_shared<Transparent>();
-    glass->set_ks(0.5);
-    glass->set_exp(2000);
-    glass->set_ior(1.5);
-    glass->set_kr(0.1);
-    glass->set_kt(0.9);
+    Point3D origin = Point3D(0,0,0);
+    add_bb_helper(w,red,origin,30,2,1);//x
+    add_bb_helper(w,darkBlue,origin,2,30,1);//y
 
-    Instance* is = new Instance(new Sphere(ball, 3));
-    w->set_material(is, red);
-    is->set_material(glass);
+
+    //enum MATERIAL_CHOICE { DIELECTRIC, EMISSIVE, GLOSSYREFLECTOR, MATTE, PHONG, PLASTIC, REFLECTIVE, SV_MATTE, TRANSPARENTS};
+    //                          X                                                   X
+    Sphere* temp = new Sphere(ball, 3);
+    Instance* is = new Instance(temp);
+    w->set_material(is, REFLECTIVE, white);
+    //is->set_material(glass);
     w->add_object(is);
 }
 
@@ -1313,11 +1314,11 @@ void set_viewpoint(World* w, Point3D& target, VIEWPOINT view_choice, double dist
     switch(view_choice) {
         case OVERHEAD:      z+=distance; break;
         case UNDERNEATH:    z-=distance; break;
-        case FRONT:         y+=distance; break;
-        case BACK:          y-=distance; break;
-        case LEFT:          x-=distance; break;
-        case RIGHT:         x+=distance; break;
-    default: throw new std::invalid_argument("Invalid choice\n"); break;
+        case FRONT:         x+=distance; break;//y
+        case BACK:          x-=distance; break;//y
+        case LEFT:          y-=distance; break;//x
+        case RIGHT:         y+=distance; break;//x
+        default: throw new std::invalid_argument("Invalid choice\n"); break;
     }
     x -= 0.001;
     y -= 0.001;
@@ -1329,7 +1330,7 @@ void set_viewpoint(World* w, Point3D& target, VIEWPOINT view_choice, double dist
 }
 
 void build_transparent_world(World* w) {
-    Point3D ball(0,0,50);
+    Point3D ball(20,1,11);//0,0,10
     set_viewpoint(w, ball, OVERHEAD, 200, 300);
     w->init_viewplane();
     w->init_ambient_light(0.4);
@@ -1342,8 +1343,8 @@ void build_transparent_world(World* w) {
 
     w->tracer_ptr = new RayCast(w);
     w->init_plane();
-    build_transparent(w, ball);
 
+    build_transparent(w, ball);
 }
 
 void build_working_desk_world(World* w, VIEWPOINT choice) {
@@ -1362,7 +1363,7 @@ void build_working_desk_world(World* w, VIEWPOINT choice) {
     lt->set_shadows(true);
 
     lt->set_direction(50, 50, 100);
-    lt->scale_radiance(11.0);
+    lt->scale_radiance(9.0);
     w->add_light(lt);
 
     //3.Rays
@@ -1396,8 +1397,8 @@ void build_working_desk(World* w) {
     Plane* plane = new Plane(Point3D(-30, -30, 0), Normal(0, 0, 1));
     build_checkerboard(plane, grey, white, 8);
     Instance* planer = new Instance(plane);
-    //planer->translate(Point3D(0,0,-40));
-    //w->add_object(planer);
+    planer->translate(Point3D(0,0,-40));
+    w->add_object(planer);
 
     //============================================================
     //2.Flat Matte Keyboard
@@ -1526,20 +1527,30 @@ void build_working_desk(World* w) {
     w->set_material(ispen_tail, white);
     cppen->add_object(ispen_tail);
     //okay, so what is origin-relative position of the pen? (x/2, y/2, z/2)
-    ispen->translate(-( 1.3*KEY_1_WIDTH ) / 2,
+    ispen->translate(-( 0/*1.3*KEY_1_WIDTH*/ ) / 2,
                      -( 10.5 * KEY_SPACING + 1.3 * KEY_1_WIDTH) / 2,
                      -( 0 ) / 2);
     //============================================================
     //4.Transparent Glass cup
     Compound* cpglass = new Compound();
     Instance* isglass = new Instance(cpglass);
+
+    //body layer
+    Instance* iscup_body = new Instance(new ThickRing(0, 5*KEY_SPACING, 2 * KEY_SPACING, 2.2 * KEY_SPACING));
+    cpglass->add_object(iscup_body);
+
+    //bottom layer
+    Instance* iscup_bottom = new Instance(
+                new SolidCylinder(0, 0.5 * KEY_1_WIDTH, 2.2 * KEY_SPACING));
+    cpglass->add_object(iscup_bottom);
+
+    //okay, so what is origin-relative position of the pen? (x/2, y/2, z/2)
+    w->set_material(isglass, PHONG, red);
+    isglass->translate(-0,
+                       -( 5 * KEY_SPACING + 0.5*KEY_1_WIDTH ) / 2,
+                      -0);
     //============================================================
     //5.Reflective phone
-    //Reflect
-    std::shared_ptr<Reflective> ptr_reflect = std::make_shared<Reflective>();
-    ptr_reflect->set_kr(1.5);
-    ptr_reflect->set_ka(0.25);
-    ptr_reflect->set_kd(0.75);
 
     Compound* cpphone = new Compound();
     Instance* isphone = new Instance(cpphone);
@@ -1560,9 +1571,13 @@ void build_working_desk(World* w) {
     ispen->rotate_z(-45);
     ispen->translate(15, -120, 35);
 
+    //7.3.glass cup visualization
+    isglass->rotate_x(+90);
+    isglass->translate(10, -80, 35);
+
     cptable->add_object(iskeyboard); //done
     cptable->add_object(ispen); //done
-    cptable->add_object(isglass);
+    cptable->add_object(isglass); //done
     cptable->add_object(isphone);
     cptable->add_object(islamp);
     //============================================================
