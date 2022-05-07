@@ -1358,12 +1358,12 @@ void build_working_desk_world(World* w, VIEWPOINT choice) {
     w->init_viewplane();
 
     //3.Light
-    w->init_ambient_light(0.4);
+    w->init_ambient_light(0.7);//0.4
     Directional* lt = new Directional;
     lt->set_shadows(true);
 
     lt->set_direction(50, 50, 100);
-    lt->scale_radiance(9.0);
+    lt->scale_radiance(1.0);//11.0
     w->add_light(lt);
 
     //3.Rays
@@ -1498,38 +1498,46 @@ void build_working_desk(World* w) {
     iskeyboard->translate( - ( 7 * KEY_SPACING - KEY_HALF_WIDTH - (-2) ) / 2,
                            - (14 * KEY_SPACING + KEY_HALF_LENGTH - (-1) ) / 2,
                            - (KEY_1_HEIGHT - 0) / 2);
+    //okay, let put it all in surface of z=0 now
+    iskeyboard->translate( 0,
+                           0,
+                           0);
     //============================================================
     //3.Glossy Apple Pen
     Compound* cppen = new Compound();
     Instance* ispen = new Instance(cppen);
     //pen-body
     Instance* ispen_body = new Instance(new SolidCylinder(0, 10.5 * KEY_SPACING, 1.3 * KEY_1_WIDTH));
-    w->set_material(ispen_body,white);
+    w->set_material(ispen_body, PHONG, white);
     cppen->add_object(ispen_body);
     //pen-head-curve
     Instance* ispen_head_curve = new Instance(new SolidCone(KEY_SPACING, 1.3 * KEY_1_WIDTH));
-    w->set_material(ispen_head_curve, white);
+    w->set_material(ispen_head_curve, PHONG, white);
     ispen_head_curve->rotate_x(180);
     cppen->add_object(ispen_head_curve);
     //pen-head-pin
     Instance* ispen_head_pin = new Instance(new SolidCone(KEY_SPACING, 1.0 * KEY_1_WIDTH));
-    w->set_material(ispen_head_pin, grey);
+    w->set_material(ispen_head_pin, PHONG, grey);
     ispen_head_pin->rotate_x(180);
     ispen_head_pin->translate(0,-1.0,0);
     cppen->add_object(ispen_head_pin);
     //pen-body-liner
     Instance* ispen_body_liner = new Instance(new SolidCylinder(0, 3, 1.301*KEY_1_WIDTH));
-    w->set_material(ispen_body_liner, grey);
+    w->set_material(ispen_body_liner, PHONG, grey);
     ispen_body_liner->translate(0, 9.3*KEY_SPACING, 0);
     cppen->add_object(ispen_body_liner);
     //pen-tail
     Instance* ispen_tail = new Instance(new Sphere(Point3D(0,10.5*KEY_SPACING,0), 1.3*KEY_1_WIDTH));
-    w->set_material(ispen_tail, white);
+    w->set_material(ispen_tail, PHONG, white);
     cppen->add_object(ispen_tail);
     //okay, so what is origin-relative position of the pen? (x/2, y/2, z/2)
     ispen->translate(-( 0/*1.3*KEY_1_WIDTH*/ ) / 2,
                      -( 10.5 * KEY_SPACING + 1.3 * KEY_1_WIDTH) / 2,
                      -( 0 ) / 2);
+    //okay, let put it all in surface of z=0 now
+    ispen->translate( 0,
+                      0,
+                      +(1.3*KEY_1_WIDTH) / 2);
     //============================================================
     //4.Transparent Glass cup
     Compound* cpglass = new Compound();
@@ -1549,6 +1557,10 @@ void build_working_desk(World* w) {
     isglass->translate(-0,
                        -( 5 * KEY_SPACING + 0.5*KEY_1_WIDTH ) / 2,
                       -0);
+    //okay, let put it all in surface of z=0 now
+    isglass->translate( 0,
+                        0,
+                        0);
     //============================================================
     //5.Reflective phone
 
@@ -1565,15 +1577,15 @@ void build_working_desk(World* w) {
 
     //7.1.keyboard visualization
     iskeyboard->rotate_z(-135);
-    iskeyboard->translate(-40, -90, 35);
+    iskeyboard->translate(-40, -90, 20);
 
     //7.2.apple pen visualization
     ispen->rotate_z(-45);
-    ispen->translate(15, -120, 35);
+    ispen->translate(15, -120, 20);
 
     //7.3.glass cup visualization
     isglass->rotate_x(+90);
-    isglass->translate(10, -80, 35);
+    isglass->translate(10, -80, 20);
 
     cptable->add_object(iskeyboard); //done
     cptable->add_object(ispen); //done
