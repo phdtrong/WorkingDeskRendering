@@ -1291,17 +1291,44 @@ void build_transparent(World* w, const Point3D& ball) {
     add_bb_helper(w,red,origin,30,2,1);//x
     add_bb_helper(w,darkBlue,origin,2,30,1);//y
 
-
     //enum MATERIAL_CHOICE { DIELECTRIC, EMISSIVE, GLOSSYREFLECTOR, MATTE, PHONG, PLASTIC, REFLECTIVE, SV_MATTE, TRANSPARENTS};
     //                          X                                                   X
-    Sphere* temp = new Sphere(ball, 3);
-    Instance* is = new Instance(temp);
-    w->set_material(is, REFLECTIVE, white);
-    //is->set_material(glass);
-    w->add_object(is);
+    //REACHING TRANSPARENTS--> Need surrouding balls to get transparent shown up on that object
+    //1.center ball
+    Instance* iscenter_ball = new Instance(new Sphere(ball, 10));
+    //2.surrounding balls
+    //0.Define distance
+    double distance_from_center_ball = 3.5;
+    //2.1.bottom ball
+    Instance* isbot_ball = new Instance(
+                new Sphere(Point3D(ball.x, ball.y, ball.z-distance_from_center_ball), 1));
+    //2.2.top ball
+    Instance* istop_ball = new Instance(
+                new Sphere(Point3D(ball.x, ball.y, ball.z+distance_from_center_ball), 1));
+    //2.3.left ball
+    Instance* isleft_ball = new Instance(
+                new Sphere(Point3D(ball.x, ball.y-distance_from_center_ball, ball.z), 1));
+    //2.4.right ball
+    Instance* isright_ball = new Instance(
+                new Sphere(Point3D(ball.x, ball.y+distance_from_center_ball, ball.z), 1));
+    //2.5.front ball
+    Instance* isfront_ball = new Instance(
+                new Sphere(Point3D(ball.x-distance_from_center_ball, ball.y, ball.z), 1));
+    //2.6.back ball
+    Instance* isback_ball = new Instance(
+                new Sphere(Point3D(ball.x+distance_from_center_ball, ball.y, ball.z), 1));
+
+    //3.Okay, now let's show one by one on the checkerboard
+    w->set_material(iscenter_ball, TRANSPARENTS, white);    w->add_object(iscenter_ball);
+//    w->set_material(isfront_ball, MATTE, red);              w->add_object(isfront_ball);
+//    w->set_material(isback_ball, MATTE, yellow);            w->add_object(isback_ball);
+//    w->set_material(isleft_ball, MATTE, green);             w->add_object(isleft_ball);
+//    w->set_material(isright_ball, MATTE, darkBlue);         w->add_object(isright_ball);
+//    w->set_material(istop_ball, MATTE, darkPurple);         w->add_object(istop_ball);
+//    w->set_material(isbot_ball, MATTE, brown);              w->add_object(isbot_ball);
 }
 
-void set_viewpoint(World* w, Point3D& target, VIEWPOINT view_choice, double distance, double view_distance) {
+Camera* set_viewpoint(World* w, Point3D& target, VIEWPOINT view_choice, double distance, double view_distance) {
     Pinhole* ptr = new Pinhole;
     ptr->set_view_distance(view_distance);
     double x=target.x;
@@ -1330,10 +1357,31 @@ void set_viewpoint(World* w, Point3D& target, VIEWPOINT view_choice, double dist
     ptr->set_up_vector(0, 0, 1);
     ptr->compute_uvw();
     w->set_camera(ptr);
+    return ptr;
+}
+
+void set_viewpoint(World* w, Point3D& target, double angle_z, double distance, double view_distance) {
+    Pinhole* ptr = new Pinhole;
+    ptr->set_view_distance(view_distance);
+    double x=target.x + distance * cos(angle_z/180*3.14);
+    double y=target.y + distance * cos(angle_z/180*3.14);
+    double z=target.z + distance * sin(angle_z/180*3.14);
+
+    Point3D origin = Point3D(0,0,0);
+    add_bb_helper(w,red,origin,30,2,1);//x
+    add_bb_helper(w,darkBlue,origin,2,30,1);//y
+
+    x += 0.001;
+    y += 0.001;
+    ptr->set_eye(Point3D(x,y,z));
+    ptr->set_lookat(target);
+    ptr->set_up_vector(0, 0, 1);
+    ptr->compute_uvw();
+    w->set_camera(ptr);
 }
 
 void build_transparent_world(World* w) {
-    Point3D ball(20,1,11);//0,0,10
+    Point3D ball(0,0,10);//0,0,10
     set_viewpoint(w, ball, OVERHEAD, 200, 300);
     w->init_viewplane();
     w->init_ambient_light(0.4);
@@ -1347,6 +1395,10 @@ void build_transparent_world(World* w) {
     w->tracer_ptr = new RayCast(w);
     w->init_plane();
 
+    //std::vector<VIEWPOINT> viewpoints = {FRONT};
+    //MultiCamera* multi_camera = build_multicamera(w, ball, viewpoints, 150, 300);
+    //w->set_cameras(multi_camera);
+
     build_transparent(w, ball);
 }
 
@@ -1356,6 +1408,7 @@ void build_working_desk_world(World* w, VIEWPOINT choice) {
 
     //1.1.Eye at
     set_viewpoint(w, target, choice, 250, 250);
+    //set_viewpoint(w, target, 30, 250, 250);
 
     //2.Viewplane ft. Light
     w->init_viewplane();
@@ -1366,7 +1419,33 @@ void build_working_desk_world(World* w, VIEWPOINT choice) {
     lt->set_shadows(true);
 
     lt->set_direction(50, 50, 100);
-    lt->scale_radiance(2.5);////11.0
+    lt->scale_radiance(0.3);////11.0
+    w->add_light(lt);
+
+    //3.Rays
+    w->tracer_ptr = new RayCast(w);
+    w->init_plane();
+    build_working_desk(w);
+}
+
+void build_working_desk_world(World* w, double angle) {
+    //1.Camera
+    Point3D target = Point3D(-5,0,20);
+
+    //1.1.Eye at
+    //set_viewpoint(w, target, choice, 250, 250);
+    set_viewpoint(w, target, angle, 250, 250);
+
+    //2.Viewplane ft. Light
+    w->init_viewplane();
+
+    //3.Light
+    w->init_ambient_light(1.8);//0.4
+    Directional* lt = new Directional;
+    lt->set_shadows(true);
+
+    lt->set_direction(50, 50, 100);
+    lt->scale_radiance(0.3);////11.0
     w->add_light(lt);
 
     //3.Rays
@@ -1574,7 +1653,7 @@ void build_working_desk(World* w) {
     cpglass->add_object(iscup_bottom);
 
     //okay, so what is origin-relative position of the pen? (x/2, y/2, z/2)
-    w->set_material(isglass, PHONG, red);
+    w->set_material(isglass, TRANSPARENTS, red);
     isglass->translate( -0,
                         -( 5 * KEY_SPACING + 0.5*KEY_1_WIDTH ) / 2,
                         -0);
@@ -1594,12 +1673,12 @@ void build_working_desk(World* w) {
     //screen
     //outer-layer/surface
     add_bb_to_compound(w, cpiPad, PHONG, white,
-    Point3D(-4.9999 * KEY_SPACING, -6.9999 * KEY_SPACING, 2.0 * KEY_1_WIDTH),
-    +9.9999 * KEY_SPACING, +13.9999 * KEY_SPACING, 0.001 * KEY_1_WIDTH);
+    Point3D(-5.0 * KEY_SPACING, -7.0 * KEY_SPACING, 1.9 * KEY_1_WIDTH),
+    +10.0 * KEY_SPACING, +14.0 * KEY_SPACING, 0.11 * KEY_1_WIDTH);
     //lcd screen
     add_bb_to_compound(w, cpiPad, REFLECTIVE, black,
-    Point3D(-4.6 * KEY_SPACING, -5.5 * KEY_SPACING, 2 * KEY_1_WIDTH),
-    +9.2 * KEY_SPACING, +11 * KEY_SPACING, 0.002 * KEY_1_WIDTH);
+    Point3D(-4.6 * KEY_SPACING, -5.5 * KEY_SPACING, 1.9 * KEY_1_WIDTH),
+    +9.2 * KEY_SPACING, +11 * KEY_SPACING, 0.12 * KEY_1_WIDTH);
     //camera
     Instance* isiPad_camera = new Instance(new Disk(Point3D(0, 6.25 * KEY_SPACING, 2.01 * KEY_1_WIDTH),
                                                    Normal(0,0,1),0.15 * KEY_SPACING));
@@ -1645,7 +1724,7 @@ void build_working_desk(World* w) {
     Directional* el = new Directional();
     el->set_direction(-35, 60, COUNTER_TOP_LATTITUDE + 6.5 * KEY_SPACING);
     el->set_shadows(true);
-    el->scale_radiance(6.0);
+    el->scale_radiance(0.3);
 
     //lamp ball cover
     Instance* islamp_ball_cover = new Instance(new OpenCone(3*KEY_SPACING, 3.5*KEY_SPACING));
@@ -1708,4 +1787,18 @@ void build_working_desk(World* w) {
     w->add_object(istable); //table
     w->add_object(ischair); //chair
     w->add_object(planer);
+}
+
+MultiCamera* build_multicamera(World* w, Point3D& target, const std::vector<VIEWPOINT> viewpoints,
+                                double distance, double view_distance) {
+    Camera* camera = nullptr;
+    std::vector<Camera*> cameras;
+
+    for(auto viewpoint : viewpoints) {
+        camera = set_viewpoint(w, target, viewpoint, distance, view_distance);
+        cameras.push_back(camera);
+    }
+    MultiCamera* multi_camera = new MultiCamera();
+    multi_camera->setup_cameras(w, cameras);
+    return multi_camera;
 }
